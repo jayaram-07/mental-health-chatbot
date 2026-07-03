@@ -11,9 +11,10 @@ interface ChatWindowProps {
   isThinking: boolean;
   currentEmotion: Emotion;
   isCrisisMode: boolean;
+  onBreathe?: () => void;
 }
 
-export function ChatWindow({ messages, isThinking, currentEmotion, isCrisisMode }: ChatWindowProps) {
+export function ChatWindow({ messages, isThinking, currentEmotion, isCrisisMode, onBreathe }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export function ChatWindow({ messages, isThinking, currentEmotion, isCrisisMode 
       )}
 
       {messages.map((msg) => (
-        <MessageBubble key={msg.id} message={msg} />
+        <MessageBubble key={msg.id} message={msg} onBreathe={onBreathe} />
       ))}
 
       {isCrisisMode && (

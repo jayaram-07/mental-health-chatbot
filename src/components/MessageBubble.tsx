@@ -10,10 +10,12 @@ export interface Message {
   emotion?: Emotion;
   isCrisis?: boolean;
   source?: 'llm' | 'fallback';
+  suggestBreathing?: boolean;
 }
 
 interface MessageBubbleProps {
   message: Message;
+  onBreathe?: () => void;
 }
 
 const emotionGradients: Record<Emotion, string> = {
@@ -25,7 +27,7 @@ const emotionGradients: Record<Emotion, string> = {
   neutral: 'from-sky-50 to-white',
 };
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, onBreathe }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
   const botGradient = message.emotion ? emotionGradients[message.emotion] : emotionGradients.neutral;
 
@@ -70,6 +72,17 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             <div className="mt-1.5">
               <EmotionChip emotion={message.emotion} />
             </div>
+          )}
+
+          {!isUser && message.suggestBreathing && onBreathe && (
+            <motion.button
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={onBreathe}
+              className="mt-2 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition-colors shadow-sm"
+            >
+              🌬 Try a 1-minute breathing exercise
+            </motion.button>
           )}
         </div>
       </div>

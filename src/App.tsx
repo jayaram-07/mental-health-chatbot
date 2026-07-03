@@ -1,26 +1,48 @@
 import { useState, useEffect } from 'react';
+import { Activity, Wind, RotateCcw } from 'lucide-react';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
 import { MoodOrb } from './components/MoodOrb';
+import { MoodJourney } from './components/MoodJourney';
+import { BreathingExercise } from './components/BreathingExercise';
 import type { Message } from './components/MessageBubble';
 import { analyze } from './lib/sentiment';
 import { getRandomResponse } from './lib/responses';
 import { fetchChatResponse } from './lib/chatApi';
 import type { Emotion } from './lib/emotion';
 
+const STORAGE_KEY = 'mh-chat-session-v1';
+
+const INITIAL_MESSAGE: Message = {
+  id: '1',
+  text: "Hi there. I'm here to listen. How are you feeling today?",
+  sender: 'bot',
+  emotion: 'neutral',
+  source: 'fallback'
+};
+
 function App() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: "Hi there. I'm here to listen. How are you feeling today?",
-      sender: 'bot',
-      emotion: 'neutral',
-      source: 'fallback'
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse saved messages', e);
     }
-  ]);
+    return [INITIAL_MESSAGE];
+  });
   const [isThinking, setIsThinking] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
   const [isCrisisMode, setIsCrisisMode] = useState(false);
+
+  const [showMoodJourney, setShowMoodJourney] = useState(false);
+  const [showBreathing, setShowBreathing] = useState(false);
+  const [confirmNewChat, setConfirmNewChat] = useState(false);
 
   // Background particles
   const [particles, setParticles] = useState<{id: number, x: number, y: number, size: number, duration: number}[]>([]);
@@ -36,6 +58,34 @@ function App() {
     }));
     setParticles(newParticles);
   }, []);
+
+  useEffect(() => {
+    if (!isCrisisMode) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages, isCrisisMode]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastUserMsg = [...messages].reverse().find(m => m.sender === 'user');
+      if (lastUserMsg && lastUserMsg.emotion) {
+        setCurrentEmotion(lastUserMsg.emotion);
+      }
+    }
+  }, [messages]);
+
+  const handleNewChat = () => {
+    if (!confirmNewChat) {
+      setConfirmNewChat(true);
+      setTimeout(() => setConfirmNewChat(false), 3000);
+      return;
+    }
+    setMessages([INITIAL_MESSAGE]);
+    setCurrentEmotion('neutral');
+    setIsCrisisMode(false);
+    setConfirmNewChat(false);
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
   const handleSendMessage = async (text: string) => {
     if (isCrisisMode) return;
@@ -75,7 +125,8 @@ function App() {
         text: reply,
         sender: 'bot',
         emotion: analysis.emotion,
-        source: 'llm'
+        source: 'llm',
+        suggestBreathing: analysis.emotion === 'anxiety'
       };
       setMessages(prev => [...prev, botMsg]);
     } catch (error) {
@@ -85,7 +136,8 @@ function App() {
         text: getRandomResponse(analysis.emotion),
         sender: 'bot',
         emotion: analysis.emotion,
-        source: 'fallback'
+        source: 'fallback',
+        suggestBreathing: analysis.emotion === 'anxiety'
       };
       setMessages(prev => [...prev, botMsg]);
     } finally {
@@ -134,6 +186,35 @@ function App() {
             </p>
           </div>
         </div>
+        
+        <div className="flex items-center gap-2 relative">
+          <button
+            onClick={() => setShowMoodJourney(!showMoodJourney)}
+            className={`p-2 rounded-full transition-colors ${showMoodJourney ? 'bg-indigo-100 text-indigo-700' : 'bg-white/50 hover:bg-white/80 text-slate-600'}`}
+            title="Mood Journey"
+          >
+            <Activity className="w-5 h-5" />
+          </button>
+          
+          <MoodJourney isOpen={showMoodJourney} messages={messages} />
+
+          <button
+            onClick={() => setShowBreathing(true)}
+            className="p-2 rounded-full bg-white/50 hover:bg-white/80 text-slate-600 transition-colors"
+            title="Breathe"
+          >
+            <Wind className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={handleNewChat}
+            className={`px-3 py-2 rounded-full flex items-center gap-2 transition-colors text-sm font-medium ${confirmNewChat ? 'bg-rose-100 text-rose-700' : 'bg-white/50 hover:bg-white/80 text-slate-600'}`}
+            title="New Chat"
+          >
+            <RotateCcw className="w-4 h-4" />
+            {confirmNewChat && <span>Sure?</span>}
+          </button>
+        </div>
       </header>
 
       {/* Main Chat Area */}
@@ -143,6 +224,7 @@ function App() {
           isThinking={isThinking} 
           currentEmotion={currentEmotion}
           isCrisisMode={isCrisisMode}
+          onBreathe={() => setShowBreathing(true)}
         />
         
         {!isCrisisMode && (
@@ -154,6 +236,8 @@ function App() {
       <footer className="p-4 text-center text-xs text-slate-400 z-10">
         <p>This is a portfolio demo project, not a substitute for professional mental health care.</p>
       </footer>
+
+      <BreathingExercise isOpen={showBreathing} onClose={() => setShowBreathing(false)} />
     </div>
   );
 }
