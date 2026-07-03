@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-orb-calm: #0ea5e9;
+  --color-orb-positive: #f59e0b;
+  --color-orb-sad: #8b5cf6;
+  --color-orb-crisis: #94a3b8;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #334155;
+}
+
+/* Custom scrollbar for chat window */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
