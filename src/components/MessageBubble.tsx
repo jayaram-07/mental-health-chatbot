@@ -9,6 +9,7 @@ export interface Message {
   sender: 'user' | 'bot';
   emotion?: Emotion;
   isCrisis?: boolean;
+  source?: 'llm' | 'fallback';
 }
 
 interface MessageBubbleProps {
@@ -59,6 +60,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             {message.text}
           </div>
           
+          {!isUser && message.source && (
+            <div className="mt-1 ml-2 text-[10px] text-slate-400 font-medium tracking-wide">
+              {message.source === 'llm' ? '✦ gemini' : '⚡ companion core'}
+            </div>
+          )}
+
           {isUser && message.emotion && !message.isCrisis && (
             <div className="mt-1.5">
               <EmotionChip emotion={message.emotion} />

@@ -5,6 +5,7 @@ import { MoodOrb } from './components/MoodOrb';
 import type { Message } from './components/MessageBubble';
 import { analyze } from './lib/sentiment';
 import { getRandomResponse } from './lib/responses';
+import { fetchChatResponse } from './lib/chatApi';
 import type { Emotion } from './lib/emotion';
 
 function App() {
@@ -13,7 +14,8 @@ function App() {
       id: '1',
       text: "Hi there. I'm here to listen. How are you feeling today?",
       sender: 'bot',
-      emotion: 'neutral'
+      emotion: 'neutral',
+      source: 'fallback'
     }
   ]);
   const [isThinking, setIsThinking] = useState(false);
@@ -35,7 +37,7 @@ function App() {
     setParticles(newParticles);
   }, []);
 
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     if (isCrisisMode) return;
 
     const analysis = analyze(text);
@@ -48,7 +50,8 @@ function App() {
       isCrisis: analysis.isCrisis
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setCurrentEmotion(analysis.emotion);
 
     if (analysis.isCrisis) {
@@ -58,17 +61,36 @@ function App() {
 
     setIsThinking(true);
 
-    // Simulate thinking delay
-    setTimeout(() => {
+    try {
+      // Prepare history for API (max ~20 messages)
+      const history = newMessages.slice(-20).map(m => ({
+        role: m.sender === 'bot' ? 'assistant' as const : 'user' as const,
+        text: m.text
+      }));
+
+      const reply = await fetchChatResponse(history, analysis.emotion);
+      
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: reply,
+        sender: 'bot',
+        emotion: analysis.emotion,
+        source: 'llm'
+      };
+      setMessages(prev => [...prev, botMsg]);
+    } catch (error) {
+      console.warn('LLM fetch failed, falling back to local responses:', error);
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         text: getRandomResponse(analysis.emotion),
         sender: 'bot',
-        emotion: analysis.emotion
+        emotion: analysis.emotion,
+        source: 'fallback'
       };
       setMessages(prev => [...prev, botMsg]);
+    } finally {
       setIsThinking(false);
-    }, 1500 + Math.random() * 1000);
+    }
   };
 
   return (
