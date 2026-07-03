@@ -71,9 +71,9 @@ export function BreathingExercise({ isOpen, onClose }: BreathingExerciseProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-xl"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/85 backdrop-blur-2xl"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 via-lavender-500/20 to-indigo-500/20 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-500/15 via-purple-500/15 to-indigo-500/15 pointer-events-none" />
           
           <button
             onClick={onClose}
@@ -103,7 +103,7 @@ export function BreathingExercise({ isOpen, onClose }: BreathingExerciseProps) {
               transition={{ duration: 4, ease: "linear" }}
             />
 
-            <div className="relative z-10 text-white font-medium text-xl tracking-wide drop-shadow-md">
+            <div className="relative z-10 text-white font-semibold text-2xl tracking-wide drop-shadow-lg">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={phase}
