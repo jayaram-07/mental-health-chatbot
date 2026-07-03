@@ -72,18 +72,18 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-ambient flex flex-col relative overflow-hidden font-sans">
       {/* Ambient Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {particles.map(p => (
           <div
             key={p.id}
-            className="absolute rounded-full bg-white opacity-20 blur-sm"
+            className="absolute rounded-full bg-indigo-400/40 blur-[2px]"
             style={{
               left: `${p.x}%`,
               top: `${p.y}%`,
-              width: `${p.size}px`,
-              height: `${p.size}px`,
+              width: `${p.size * 1.5}px`,
+              height: `${p.size * 1.5}px`,
               animation: `float ${p.duration}s infinite ease-in-out alternate`
             }}
           />
@@ -91,23 +91,23 @@ function App() {
         <style>{`
           @keyframes float {
             0% { transform: translateY(0) translateX(0); }
-            100% { transform: translateY(-20px) translateX(10px); }
+            100% { transform: translateY(-40px) translateX(20px); }
           }
         `}</style>
       </div>
 
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 flex items-center justify-between z-10 sticky top-0">
-        <div className="flex items-center gap-3">
+      <header className="bg-white/60 backdrop-blur-xl border-b border-white/40 p-4 flex items-center justify-between z-10 sticky top-0 shadow-sm">
+        <div className="flex items-center gap-4">
           <MoodOrb 
             emotion={currentEmotion} 
             isThinking={isThinking} 
             isCrisis={isCrisisMode}
-            className="w-10 h-10" 
+            className="w-12 h-12" 
           />
           <div>
-            <h1 className="font-semibold text-slate-800">Companion</h1>
-            <p className="text-xs text-slate-500">
+            <h1 className="font-semibold text-slate-800 text-lg tracking-tight">Companion</h1>
+            <p className="text-xs text-slate-500 font-medium">
               {isCrisisMode ? 'Support Mode' : isThinking ? 'Thinking...' : 'Online'}
             </p>
           </div>
@@ -115,7 +115,7 @@ function App() {
       </header>
 
       {/* Main Chat Area */}
-      <main className="flex-1 max-w-2xl w-full mx-auto flex flex-col z-10 bg-slate-50/50 backdrop-blur-sm shadow-2xl shadow-slate-200/50">
+      <main className="flex-1 max-w-3xl w-full mx-auto flex flex-col z-10 my-4 sm:my-8 bg-white/40 backdrop-blur-md shadow-2xl shadow-indigo-900/5 sm:rounded-3xl border border-white/50 overflow-hidden">
         <ChatWindow 
           messages={messages} 
           isThinking={isThinking} 
@@ -129,7 +129,7 @@ function App() {
       </main>
 
       {/* Footer Disclaimer */}
-      <footer className="p-3 text-center text-xs text-slate-400 z-10 bg-slate-50">
+      <footer className="p-4 text-center text-xs text-slate-400 z-10">
         <p>This is a portfolio demo project, not a substitute for professional mental health care.</p>
       </footer>
     </div>
