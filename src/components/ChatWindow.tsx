@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { MessageBubble } from "./MessageBubble";
+import { MessageRow } from "./MessageBubble";
 import type { Message } from "./MessageBubble";
 import { CrisisSupportCard } from './CrisisSupportCard';
 import { MoodOrb } from './MoodOrb';
@@ -12,57 +11,82 @@ interface ChatWindowProps {
   currentEmotion: Emotion;
   isCrisisMode: boolean;
   onBreathe?: () => void;
+  onStarter?: (text: string) => void;
+  onRegenerate?: () => void;
+  onSpeak?: (text: string) => void;
 }
 
-export function ChatWindow({ messages, isThinking, currentEmotion, isCrisisMode, onBreathe }: ChatWindowProps) {
+export function ChatWindow({ messages, isThinking, isCrisisMode, onBreathe, onStarter, onRegenerate, onSpeak }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking, isCrisisMode]);
 
+  const showStarters = messages.length <= 1 && !messages.some(m => m.sender === 'user');
+  const starters = [
+    "I'm feeling anxious",
+    "I had a really good day",
+    "I can't switch my brain off",
+    "I'm just feeling low"
+  ];
+
+  const lastAssistantMsgIndex = messages.map(m => m.sender).lastIndexOf('bot');
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      {messages.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-6">
-          <MoodOrb emotion="neutral" isThinking={false} isCrisis={false} className="w-32 h-32 opacity-80" />
-          <p className="text-sm font-medium tracking-wide">Say hello to start chatting.</p>
-        </div>
-      )}
-
-      {messages.map((msg) => (
-        <MessageBubble key={msg.id} message={msg} onBreathe={onBreathe} />
-      ))}
-
-      {isCrisisMode && (
-        <CrisisSupportCard />
-      )}
-
-      {isThinking && !isCrisisMode && (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-start mb-6"
-        >
-          <div className="flex items-end gap-3">
-            <div className="shrink-0 mb-1">
-              <MoodOrb 
-                emotion={currentEmotion} 
-                isThinking={true} 
-                isCrisis={false}
-                className="w-10 h-10" 
-              />
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-[44rem] mx-auto flex flex-col">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-400 space-y-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-indigo-400/20 rounded-full blur-2xl" />
+              <MoodOrb emotion="neutral" isThinking={false} isCrisis={false} className="w-32 h-32 opacity-90 relative z-10" />
             </div>
-            <div className="bg-white/80 backdrop-blur-sm text-slate-400 px-5 py-3.5 rounded-3xl rounded-bl-sm shadow-sm border border-white/60 text-sm flex gap-1.5 items-center h-[48px]">
-              <span className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="text-center space-y-2">
+              <p className="text-lg font-medium text-slate-700 tracking-tight">How are you feeling today?</p>
+              <p className="text-sm text-slate-500">I'm here to listen and support you.</p>
             </div>
           </div>
-        </motion.div>
-      )}
-      
-      <div ref={bottomRef} />
+        )}
+
+        {messages.map((msg, index) => {
+          const isLastAssistant = index === lastAssistantMsgIndex;
+          const canRegenerate = isLastAssistant && !isThinking && !isCrisisMode && !msg.streaming;
+          
+          return (
+            <MessageRow 
+              key={msg.id} 
+              message={msg} 
+              onBreathe={onBreathe} 
+              onRegenerate={onRegenerate}
+              canRegenerate={canRegenerate}
+              onSpeak={onSpeak}
+            />
+          );
+        })}
+
+        {showStarters && onStarter && (
+          <div className="flex flex-wrap gap-3 mt-6 justify-center sm:justify-start">
+            {starters.map((starter, i) => (
+              <button
+                key={i}
+                onClick={() => onStarter(starter)}
+                className="px-5 py-2.5 rounded-full bg-white/60 backdrop-blur-sm border border-white/80 text-sm text-slate-600 hover:bg-white/90 hover:text-indigo-700 hover:border-indigo-100 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+              >
+                {starter}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isCrisisMode && (
+          <div className="mt-6">
+            <CrisisSupportCard />
+          </div>
+        )}
+        
+        <div ref={bottomRef} className="h-4" />
+      </div>
     </div>
   );
 }
