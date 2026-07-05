@@ -3,3 +3,9 @@ dist
 .DS_Store
 *.local
 .vercel
+
+# Environment secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+.pytest_cache
